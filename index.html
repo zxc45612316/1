@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>模擬台股交易</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+    h1 { text-align: center; }
+    .stock, .wallet { background: #fff; padding: 20px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .stock-list { margin-top: 20px; }
+    .stock-item { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; }
+    button { padding: 5px 10px; margin-left: 5px; }
+    input { width: 60px; text-align: center; }
+  </style>
+</head>
+<body>
+  <h1>模擬台股交易</h1>
+
+  <div class="wallet">
+    <h2>資金餘額：<span id="cash">100000</span> 元</h2>
+  </div>
+
+  <div class="stock-list" id="stock-list"></div>
+
+  <script>
+    let stocks = [
+      { name: "台積電", code: "2330", price: 600, owned: 0 },
+      { name: "鴻海", code: "2317", price: 110, owned: 0 },
+      { name: "聯發科", code: "2454", price: 900, owned: 0 }
+    ];
+
+    let cash = localStorage.getItem('cash') ? parseFloat(localStorage.getItem('cash')) : 100000;
+    let portfolio = localStorage.getItem('portfolio') ? JSON.parse(localStorage.getItem('portfolio')) : {};
+
+    function saveData() {
+      localStorage.setItem('cash', cash);
+      localStorage.setItem('portfolio', JSON.stringify(portfolio));
+    }
+
+    function updateDisplay() {
+      document.getElementById('cash').innerText = Math.floor(cash);
+      const list = document.getElementById('stock-list');
+      list.innerHTML = '';
+      stocks.forEach(stock => {
+        const owned = portfolio[stock.code] || 0;
+        const div = document.createElement('div');
+        div.className = 'stock-item';
+        div.innerHTML = `
+          <div>
+            <strong>${stock.name} (${stock.code})</strong><br>
+            現價：${Math.floor(stock.price)} 元<br>
+            持有：${owned} 股
+          </div>
+          <div>
+            <input type="number" id="amount-${stock.code}" min="1" value="1">
+            <button onclick="buyStock('${stock.code}')">買</button>
+            <button onclick="sellStock('${stock.code}')">賣</button>
+          </div>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function buyStock(code) {
+      const stock = stocks.find(s => s.code === code);
+      const amount = parseInt(document.getElementById(`amount-${code}`).value);
+      const cost = stock.price * amount;
+      if (cash >= cost) {
+        cash -= cost;
+        portfolio[code] = (portfolio[code] || 0) + amount;
+        saveData();
+        updateDisplay();
+      } else {
+        alert('資金不足！');
+      }
+    }
+
+    function sellStock(code) {
+      const stock = stocks.find(s => s.code === code);
+      const amount = parseInt(document.getElementById(`amount-${code}`).value);
+      if ((portfolio[code] || 0) >= amount) {
+        cash += stock.price * amount;
+        portfolio[code] -= amount;
+        saveData();
+        updateDisplay();
+      } else {
+        alert('持股不足！');
+      }
+    }
+
+    function fluctuatePrices() {
+      stocks.forEach(stock => {
+        let change = (Math.random() - 0.5) * 10; // 每次最多上下5元
+        stock.price += change;
+        if (stock.price < 1) stock.price = 1; // 不讓價格變負
+      });
+      updateDisplay();
+    }
+
+    updateDisplay();
+    setInterval(fluctuatePrices, 5000); // 每5秒波動一次
+  </script>
+</body>
+</html>
