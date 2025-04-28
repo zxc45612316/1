@@ -3,29 +3,34 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>模擬台股交易 升級版</title>
+  <title>模擬台股交易 美化版</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-    h1 { text-align: center; }
-    .stock, .wallet, .history { background: #fff; padding: 20px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .stock-list { margin-top: 20px; }
-    .stock-item { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; }
-    button { padding: 5px 10px; margin-left: 5px; }
-    input { width: 60px; text-align: center; }
-    table { width: 100%; margin-top: 10px; border-collapse: collapse; }
-    th, td { padding: 8px; border-bottom: 1px solid #ddd; text-align: center; }
-    .search-bar { margin-bottom: 20px; }
+    body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #e0f7fa, #ffffff); }
+    h1 { text-align: center; color: #006064; margin-bottom: 30px; }
+    .wallet, .history, .stock-item, .search-bar { background: #ffffff; padding: 20px; margin: 10px auto; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 800px; }
+    .wallet { text-align: center; font-size: 1.5em; font-weight: bold; color: #004d40; }
+    .stock-list { margin-top: 20px; display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
+    .stock-item { width: 250px; transition: transform 0.3s ease; }
+    .stock-item:hover { transform: translateY(-5px); }
+    button { padding: 8px 12px; margin: 5px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    .buy { background-color: #4caf50; color: white; }
+    .sell { background-color: #f44336; color: white; }
+    input[type=number] { width: 60px; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 8px; margin-top: 5px; }
+    table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+    th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: center; }
+    tr:hover { background-color: #f1f1f1; }
+    .search-bar input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #bbb; font-size: 1em; }
   </style>
 </head>
 <body>
-  <h1>模擬台股交易 升級版</h1>
+  <h1>台股模擬交易平台</h1>
 
   <div class="wallet">
-    <h2>資金餘額：<span id="cash">100000</span> 元</h2>
+    資金餘額：<span id="cash">100000</span> 元
   </div>
 
   <div class="search-bar">
-    <input type="text" id="searchInput" placeholder="搜尋股票代號或名稱" oninput="searchStock()" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc;">
+    <input type="text" id="searchInput" placeholder="搜尋股票代號或名稱" oninput="searchStock()">
   </div>
 
   <div class="stock-list" id="stock-list"></div>
@@ -76,16 +81,12 @@
           const div = document.createElement('div');
           div.className = 'stock-item';
           div.innerHTML = `
-            <div>
-              <strong>${stock.name} (${stock.code})</strong><br>
-              現價：${Math.floor(stock.price)} 元<br>
-              持有：${owned} 股
-            </div>
-            <div>
-              <input type="number" id="amount-${stock.code}" min="1" value="1">
-              <button onclick="buyStock('${stock.code}')">買</button>
-              <button onclick="sellStock('${stock.code}')">賣</button>
-            </div>
+            <div><strong>${stock.name} (${stock.code})</strong><br>
+            現價：${Math.floor(stock.price)} 元<br>
+            持有：${owned} 股<br><br>
+            <input type="number" id="amount-${stock.code}" min="1" value="1"><br>
+            <button class="buy" onclick="buyStock('${stock.code}')">買</button>
+            <button class="sell" onclick="sellStock('${stock.code}')">賣</button></div>
           `;
           list.appendChild(div);
         }
