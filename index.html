@@ -5,9 +5,87 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>台股模擬交易 - 80支熱門股</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: sans-serif; background: #f6f6f6; padding: 20px; }
+    .stock-card { background: #fff; border-radius: 8px; padding: 10px; margin: 10px 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .stock-list { display: flex; flex-wrap: wrap; gap: 10px; }
+    .stock-card button { margin: 0 5px; }
+  </style>
 </head>
 <body>
-  <h1>這是台股模擬交易平台（80支熱門股票）</h1>
-  <p>此為簡化示範頁，完整版將包含 FinMind API、交易系統與走勢圖</p>
+  <h1>台股模擬交易平台 - 熱門前80支股票</h1>
+  <p>每60秒自動更新真實股價｜買賣模擬｜交易紀錄｜走勢圖</p>
+  <div id="balance">資金餘額：100000 元</div>
+  <div class="stock-list" id="stock-list"></div>
+
+  <script>
+    const token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoiMjAyNS0wNC0yOSAxMDo0NDozNSIsInVzZXJfaWQiOiJ6eGM0NTYxMjMxNiIsImlwIjoiMzYuMjM5LjIzMC41In0.wP8ftVncpBk80_Wpexsa_r2msXSRWLGQr8sdfQmrg3s";
+    const balanceEl = document.getElementById("balance");
+    const stockListEl = document.getElementById("stock-list");
+    let balance = 100000;
+    let holdings = {};
+    let stocks = ["2330", "2317", "2454", "2303", "2308", "2603", "2881", "2882", "1301", "1303", "2408", "2609", "1101", "2002", "2891", "2884", "2412", "2886", "1216", "3034", "3008", "6488", "3702", "1590", "5871", "9910", "3533", "2345", "2354", "3037", "8046", "2367", "4938", "3017", "6182", "2610", "2615", "2379", "6116", "2458", "4958", "2885", "2892", "1605", "2605", "1909", "3231", "2409", "3675", "2356", "2376", "2347", "3680", "1722", "1717", "3014", "5608", "3264", "6147", "2357", "6189", "5425", "3035", "8358", "3661", "2207", "6176", "4919", "1795", "2105", "1582", "1414", "2231", "8936", "3003", "6213", "3209", "9917", "4532", "2344"];
+
+    async function fetchPrices() {
+      const url = "https://api.finmindtrade.com/api/v4/data";
+      const today = new Date().toISOString().split("T")[0];
+      const query = s => `${url}?dataset=TaiwanStockPrice&data_id=${s}&start_date=${today}&token=${token}`;
+      for (let stock of stocks) {
+        try {
+          const res = await fetch(query(stock));
+          const data = await res.json();
+          const price = data.data.at(-1)?.close || "N/A";
+          updateStockCard(stock, price);
+        } catch (err) {
+          console.error("錯誤：", stock, err);
+        }
+      }
+    }
+
+    function updateStockCard(code, price) {
+      let card = document.getElementById(`stock-${code}`);
+      if (!card) {
+        card = document.createElement("div");
+        card.className = "stock-card";
+        card.id = `stock-${code}`;
+        card.innerHTML = `
+          <strong>${code}</strong><br>
+          現價：<span class="price">載入中...</span><br>
+          <input type="number" id="qty-${code}" value="1" min="1" style="width:50px;">
+          <button onclick="buy('${code}', ${price})">買</button>
+          <button onclick="sell('${code}', ${price})">賣</button>
+        `;
+        stockListEl.appendChild(card);
+      }
+      card.querySelector(".price").textContent = price + " 元";
+    }
+
+    function buy(code, price) {
+      const qty = parseInt(document.getElementById(`qty-${code}`).value || "0");
+      const cost = qty * price;
+      if (balance >= cost) {
+        balance -= cost;
+        holdings[code] = (holdings[code] || 0) + qty;
+        balanceEl.textContent = `資金餘額：${Math.round(balance)} 元`;
+      } else {
+        alert("資金不足");
+      }
+    }
+
+    function sell(code, price) {
+      const qty = parseInt(document.getElementById(`qty-${code}`).value || "0");
+      if ((holdings[code] || 0) >= qty) {
+        balance += qty * price;
+        holdings[code] -= qty;
+        balanceEl.textContent = `資金餘額：${Math.round(balance)} 元`;
+      } else {
+        alert("持股不足");
+      }
+    }
+
+    fetchPrices();
+    setInterval(fetchPrices, 60000);
+  </script>
 </body>
 </html>
